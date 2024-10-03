@@ -1,23 +1,31 @@
-import { useState } from "react";
 import { H1 } from "../components/tailwind/H1";
 import { H2 } from "../components/tailwind/H2";
 import Button from "../components/ui/Button";
 import Select from "../components/ui/Select";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../state/store";
+import { setRows, setWinLine } from "../state/userChoice";
 
 
 const rowCellLineArray = [3, 4, 5, 6, 7, 8, 9, 10];
 
 const WelcomePage = () => {
 
-  const [selectedValue, setSelectedValue] = useState<number>(3);
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedValue(parseInt(event.target.value));
+        const value = parseInt(event.target.value);
+        dispatch(setRows(value));
   };
 
-  console.log(selectedValue)
+  const handleWinLineChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = parseInt(event.target.value);
+        dispatch(setWinLine(value));
+  };
 
-  const winLineArray = Array.from({ length: selectedValue - 2 }, (_, i: number) => i + 3); // Creating a array with a max row value
+  const rows = useSelector((state: RootState) => state.userChoice.rows);
+
+  const winLineArray = Array.from({ length: rows - 2 }, (_, i: number) => i + 3); // Creating a array with a max row value
 
   return (
     <div className="flex flex-col justify-center items-center h-screen text-center">
@@ -35,7 +43,8 @@ const WelcomePage = () => {
                 </div>
                 <div className="flex justify-between items-center mb-5">
                     <p>Please choice number of win line</p>
-                    <Select            
+                    <Select 
+                        onChange={handleWinLineChange}           
                         winLine = {winLineArray}
                     />
                 </div>
