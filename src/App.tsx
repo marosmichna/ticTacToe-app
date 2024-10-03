@@ -1,9 +1,10 @@
+import WelcomePage from "./pages/WelcomePage";
 
 function App() {
 
   return (
-    <div className="text-3xl font-bold underline">
-      Hello world
+    <div className="w-full h-screen bg-fuchsia-950">
+      <WelcomePage />
     </div>
   )
 }
