@@ -4,7 +4,7 @@ import Button from "../components/ui/Button";
 import Select from "../components/ui/Select";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../state/store";
-import { setRows, setWinLine } from "../state/userChoice";
+import { setPlayWithComputer, setPlayWithPlayer, setRows, setWinLine } from "../state/userChoice";
 
 
 const rowCellLineArray = [3, 4, 5, 6, 7, 8, 9, 10];
@@ -55,11 +55,13 @@ const WelcomePage = () => {
                 <Button 
                     className="my-5"
                     buttonText="Play with other Player"
+                    onClick={() => dispatch(setPlayWithPlayer(true))}
                 />
                 <Button 
                     variant="withComputer"
                     className="mb-5"
                     buttonText="Play with Computer"
+                    onClick={() => dispatch(setPlayWithComputer(true))}
                 />
             </div>
 
