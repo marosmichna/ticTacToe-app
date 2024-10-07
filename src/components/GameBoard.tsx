@@ -17,6 +17,7 @@ const GameBoard = () => {
     const [winner, setWinner] = useState<string | null>(null);
 
     const [gameStatus, setGameStatus] = useState<"PLAY" | "WIN" | "TIE" | "ERROR">("PLAY");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const checkWinner = (board: string[][]) => {
         // Function to check individual lines (rows, columns, diagonal)
@@ -65,11 +66,41 @@ const GameBoard = () => {
         return null; // If there is no winner
     };
 
+    const validateGame = (newBoard: string [][], rowIndex: number, colIndex: number) => {
+        // Check if the game strat with the wrong Player
+        if (newBoard.flat().every(cell => cell === "") && currentPlayer !== "X") {
+            setGameStatus("ERROR");
+            setErrorMessage("Player X must start the game");
+            return false;
+        }
+
+        // Chceck if a player play twice in a game
+        const xCount = newBoard.flat().filter(cell => cell === "X").length;
+        const oCOunt = newBoard.flat().filter(cell => cell === "O").length;
+
+        if ((currentPlayer === "X" && xCount > oCOunt) || currentPlayer === "O" && xCount === oCOunt) {
+            setGameStatus("ERROR");
+            setErrorMessage("Players take turns makeing moves");
+            return false;
+        }
+
+        if (winner) {
+            setErrorMessage(`Player ${newBoard[rowIndex][colIndex]} played after game was already won`);
+            setGameStatus("ERROR");
+            return false;
+        }
+
+        return true;
+    }
+
     const handleCellClick = (rowIndex: number, colIndex: number) => {
         if (board[rowIndex][colIndex] !== "" || winner) return; // If the cell is already occupied or there is a winner, it does nothing
 
         setBoard((prevBoard) => {
             const newBoard = prevBoard.map((row) => [...row]);
+
+            if (!validateGame(newBoard, rowIndex, colIndex)) return prevBoard; // Validate the game state before proceeding
+
             newBoard[rowIndex][colIndex] = currentPlayer;
 
             const winningPlayer = checkWinner(newBoard);
@@ -123,7 +154,12 @@ const GameBoard = () => {
             </div>
             <div>
                 {
-                    gameStatus === "TIE" && !winner && <p className="text-white mt-5">It's a tie!</p>
+                    (gameStatus === "TIE" && !winner) && <p className="text-white mt-5">It's a tie!</p>
+                }
+            </div>
+            <div>
+                {
+                    (gameStatus === "ERROR" && errorMessage) && <p className="text-white mt-5">Error: <span className="ml-2">{errorMessage}</span></p>
                 }
             </div>
         </div>
