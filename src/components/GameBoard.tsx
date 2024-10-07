@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { RootState } from "../state/store";
 import Cell from "./Cell";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 
 const GameBoard = () => {
@@ -15,6 +15,8 @@ const GameBoard = () => {
 
     const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
     const [winner, setWinner] = useState<string | null>(null);
+
+    const [gameStatus, setGameStatus] = useState<"PLAY" | "WIN" | "TIE" | "ERROR">("PLAY");
 
     const checkWinner = (board: string[][]) => {
         // Function to check individual lines (rows, columns, diagonal)
@@ -73,6 +75,7 @@ const GameBoard = () => {
             const winningPlayer = checkWinner(newBoard);
             if (winningPlayer) {
                 setWinner(winningPlayer);
+                setGameStatus("WIN");
             } else {
                 setCurrentPlayer(currentPlayer === "X" ? "O" : "X"); // Player change
             }
@@ -80,24 +83,48 @@ const GameBoard = () => {
         });
     };
 
-    console.log(board)
-    console.log(winner)
+    // Update the game status based on winner or tie
+    useEffect(() => {
+        if (!winner && board.every(row => row.every(cell => cell !== ""))) {
+            setGameStatus("TIE"); // If board is full and there is no winner, it is a tie
+        }
+    }, [board, winner]);
 
     return (
-        <div className="flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
             <div className="grid" style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}>
-            {board.map((row, rowIndex) => (
-                <div className="flex" key={rowIndex}>
-                {row.map((cell, colIndex) => (
-                    <Cell 
-                        key={`${rowIndex}-${colIndex}`}
-                        onClick={() => handleCellClick(rowIndex, colIndex)}
-                    >
-                        {cell}
-                    </Cell>
+                {board.map((row, rowIndex) => (
+                    <div className="flex" key={rowIndex}>
+                    {row.map((cell, colIndex) => (
+                        <Cell 
+                            key={`${rowIndex}-${colIndex}`}
+                            onClick={() => handleCellClick(rowIndex, colIndex)}
+                        >
+                            <p className="text-white">{cell}</p>
+                        </Cell>
+                    ))}
+                    </div>
                 ))}
-                </div>
-            ))}
+            </div>
+            <div>
+                {
+                    gameStatus && <p className="text-white mt-5">Status of the Game is: <span className="ml-2 text-yellow-200">{gameStatus}</span></p>
+                }
+            </div>
+            <div>
+                {
+                    (!winner && gameStatus==="PLAY") && <p className="text-white mt-5">The next Player is: <span className="ml-2">{currentPlayer}</span></p>
+                }
+            </div>
+            <div>
+                {
+                    winner && <p className="text-white mt-5">The winner is Player: <span className="ml-2">{winner}</span></p>
+                }
+            </div>
+            <div>
+                {
+                    gameStatus === "TIE" && !winner && <p className="text-white mt-5">It's a tie!</p>
+                }
             </div>
         </div>
     )
