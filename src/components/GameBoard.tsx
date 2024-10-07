@@ -248,6 +248,11 @@ const GameBoard = () => {
                     (gameStatus === "ERROR" && errorMessage) && <p className="text-white mt-5">Error: <span className="ml-2">{errorMessage}</span></p>
                 }
             </div>
+            <div>
+                {
+                    (gameStatus === "WIN" || gameStatus === "TIE" || gameStatus ===  "ERROR") && <p className="bg-yellow-100 py-2 px-3 mt-2 rounded-md hover:opacity-80 cursor-pointer" onClick={() => window.location.reload()}>Play Again</p>
+                }
+            </div>
         </div>
     )
 }
