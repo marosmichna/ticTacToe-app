@@ -94,20 +94,73 @@ const GameBoard = () => {
         return true;
     }, [currentPlayer, winner])
 
+    // const makeComputerMove = useCallback((board: string[][]) => {
+    //     const emptyCells: [number, number][] = [];
+    //     for (let row = 0; row < rows; row++) {
+    //         for (let col = 0; col < rows; col++) {
+    //             if (board[row][col] === "") {
+    //                 emptyCells.push([row, col]);
+    //             }
+    //         }
+    //     }
+    //     if (emptyCells.length > 0) {
+    //         const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    //         const [rowIndex, colIndex] = emptyCells[randomIndex];
+    //         return { rowIndex, colIndex };
+    //     }
+    //     return null;
+    // }, [rows]); --- function for the simple computer logic
+
+    // Function for the extended computer logic
     const makeComputerMove = useCallback((board: string[][]) => {
         const emptyCells: [number, number][] = [];
+        const playerCells: [number, number][] = [];
+    
+        // First, it finds all empty cells and cells where player X made his move
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < rows; col++) {
                 if (board[row][col] === "") {
                     emptyCells.push([row, col]);
+                } else if (board[row][col] === "X") {
+                    playerCells.push([row, col]);
                 }
             }
         }
+    
+        // Searching for adjacent empty cells next to the player's moves
+        const adjacentEmptyCells: [number, number][] = [];
+        const directions = [
+            [-1, 0], [1, 0],  // up, down
+            [0, -1], [0, 1],  // left, right
+            [-1, -1], [1, 1], // diagonals
+            [-1, 1], [1, -1]
+        ];
+    
+        playerCells.forEach(([playerRow, playerCol]) => {
+            directions.forEach(([dRow, dCol]) => {
+                const newRow = playerRow + dRow;
+                const newCol = playerCol + dCol;
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < rows && board[newRow][newCol] === "") {
+                    adjacentEmptyCells.push([newRow, newCol]);
+                }
+            });
+        });
+    
+        // If there are adjacent empty cells, choose a random one
+        if (adjacentEmptyCells.length > 0) {
+            const randomIndex = Math.floor(Math.random() * adjacentEmptyCells.length);
+            const [rowIndex, colIndex] = adjacentEmptyCells[randomIndex];
+            return { rowIndex, colIndex };
+        }
+    
+        // If there are no adjacent empty cells, choose a random move from the empty cells
         if (emptyCells.length > 0) {
             const randomIndex = Math.floor(Math.random() * emptyCells.length);
             const [rowIndex, colIndex] = emptyCells[randomIndex];
             return { rowIndex, colIndex };
         }
+    
+        // If there are no empty cells, return null (the game is probably a draw)
         return null;
     }, [rows]);
     
