@@ -1,13 +1,14 @@
 import { useSelector } from "react-redux";
 import { RootState } from "../state/store";
 import Cell from "./Cell";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 
 const GameBoard = () => {
 
     const rows = useSelector((state: RootState) => state.userChoice.rows);
     const winLine = useSelector((state: RootState) => state.userChoice.winLine);
+    const playWithComputer = useSelector((state: RootState) => state.userChoice.playWithComputer);
 
     const [board, setBoard] = useState<string[][]>(
         Array.from({ length: rows }, () => Array(rows).fill(""))
@@ -19,7 +20,7 @@ const GameBoard = () => {
     const [gameStatus, setGameStatus] = useState<"PLAY" | "WIN" | "TIE" | "ERROR">("PLAY");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const checkWinner = (board: string[][]) => {
+    const checkWinner = useCallback((board: string[][]) => {
         // Function to check individual lines (rows, columns, diagonal)
         const checkLine = (line: string[]) => {
             let count = 0;
@@ -64,9 +65,9 @@ const GameBoard = () => {
         }
 
         return null; // If there is no winner
-    };
+    }, [currentPlayer, rows, winLine]);
 
-    const validateGame = (newBoard: string [][], rowIndex: number, colIndex: number) => {
+    const validateGame = useCallback((newBoard: string [][], rowIndex: number, colIndex: number) => {
         // Check if the game strat with the wrong Player
         if (newBoard.flat().every(cell => cell === "") && currentPlayer !== "X") {
             setGameStatus("ERROR");
@@ -91,28 +92,60 @@ const GameBoard = () => {
         }
 
         return true;
-    }
+    }, [currentPlayer, winner])
 
-    const handleCellClick = (rowIndex: number, colIndex: number) => {
-        if (board[rowIndex][colIndex] !== "" || winner) return; // If the cell is already occupied or there is a winner, it does nothing
-
+    const makeComputerMove = useCallback((board: string[][]) => {
+        const emptyCells: [number, number][] = [];
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < rows; col++) {
+                if (board[row][col] === "") {
+                    emptyCells.push([row, col]);
+                }
+            }
+        }
+        if (emptyCells.length > 0) {
+            const randomIndex = Math.floor(Math.random() * emptyCells.length);
+            const [rowIndex, colIndex] = emptyCells[randomIndex];
+            return { rowIndex, colIndex };
+        }
+        return null;
+    }, [rows]);
+    
+    const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
+        if (board[rowIndex][colIndex] !== "" || winner) return;
+    
         setBoard((prevBoard) => {
             const newBoard = prevBoard.map((row) => [...row]);
-
-            if (!validateGame(newBoard, rowIndex, colIndex)) return prevBoard; // Validate the game state before proceeding
-
+    
+            if (!validateGame(newBoard, rowIndex, colIndex)) return prevBoard;
+    
             newBoard[rowIndex][colIndex] = currentPlayer;
-
+    
             const winningPlayer = checkWinner(newBoard);
             if (winningPlayer) {
                 setWinner(winningPlayer);
                 setGameStatus("WIN");
             } else {
-                setCurrentPlayer(currentPlayer === "X" ? "O" : "X"); // Player change
+                setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
             }
             return newBoard;
         });
-    };
+    }, [board, currentPlayer, winner, checkWinner, validateGame]);
+
+    // Trigger computer's turn after player's move
+    useEffect(() => {
+        if (playWithComputer && currentPlayer === "O" && gameStatus === "PLAY" && !winner) {
+            const computerMove = makeComputerMove(board);
+            if (computerMove) {
+                const { rowIndex, colIndex } = computerMove;
+                const timer = setTimeout(() => { 
+                    handleCellClick(rowIndex, colIndex);
+                }, 1000); // 1 second turn delay
+
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [currentPlayer, playWithComputer, gameStatus, board, winner, handleCellClick, makeComputerMove]);
 
     // Update the game status based on winner or tie
     useEffect(() => {
